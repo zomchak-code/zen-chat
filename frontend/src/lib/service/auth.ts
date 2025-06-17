@@ -1,12 +1,10 @@
-import { useClerkContext } from "svelte-clerk";
-
 import { Clerk } from '@clerk/clerk-js'
 import { ENV } from "$lib/util/env";
 import type { ListenerCallback } from '@clerk/types';
 import { dark } from "@clerk/themes";
 
 export const clerk = new Clerk(ENV.VITE_CLERK_PUBLISHABLE_KEY);
-await clerk.load({
+clerk.load({
   // Set load options here
 })
 
