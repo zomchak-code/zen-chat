@@ -26,10 +26,10 @@
 
 	const guest = $derived(page.route.id?.startsWith("/signin"));
 
-	function init() {
+	async function init() {
 		if (browser) {
 			if (!guest) {
-				const user = authService.getUser();
+				const user = await authService.getUser();
 				if (!user) {
 					goto("/signin");
 				}

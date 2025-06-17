@@ -4,13 +4,13 @@ import type { ListenerCallback } from '@clerk/types';
 import { dark } from "@clerk/themes";
 
 export const clerk = new Clerk(ENV.VITE_CLERK_PUBLISHABLE_KEY);
-clerk.load({
+const promise = clerk.load({
   // Set load options here
 })
 
 class AuthService {
-  signIn(mode: 'light' | 'dark') {
-    console.log(mode);
+  async signIn(mode: 'light' | 'dark') {
+    await promise;
     clerk.mountSignIn(document.getElementById('sign-in'), {
       withSignUp: true,
       appearance: {
@@ -18,7 +18,12 @@ class AuthService {
       }
     });
   }
-  getUser() {
+  async mountButton() {
+    await promise;
+    clerk.mountUserButton(document.getElementById("profile"));
+  }
+  async getUser() {
+    await promise;
     return clerk.user;
   }
   async getToken() {

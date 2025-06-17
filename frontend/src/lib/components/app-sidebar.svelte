@@ -10,6 +10,7 @@
   import berlin from "$lib/assets/berlin.svg";
   import { mode } from "mode-watcher";
   import Progress from "./ui/progress/progress.svelte";
+  import { authService } from "$lib/service/auth";
 
   const convex = useConvexClient();
   const chats = useQuery(api.chat.get, {});
@@ -24,7 +25,7 @@
     }
   }
 
-  $effect(() => clerk.mountUserButton(document.getElementById("profile")));
+  $effect(authService.mountButton);
 </script>
 
 <Sidebar.Root

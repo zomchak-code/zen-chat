@@ -5,9 +5,9 @@
   import { Loader2 } from "@lucide/svelte";
   import { mode } from "mode-watcher";
 
-  function init() {
+  async function init() {
     if (browser) {
-      const user = authService.getUser();
+      const user = await authService.getUser();
       if (user) {
         return goto("/");
       } else {
