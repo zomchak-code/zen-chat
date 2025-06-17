@@ -10,8 +10,7 @@
     "frontend"
   ],
   "scripts": {
-    "backend": "bun --filter backend start",
-    "frontend" : "bun --filter frontend build"
+    "backend": "bun --filter backend start"
   },
   "dependencies": {
     "@clerk/backend": "^2.0.0",
