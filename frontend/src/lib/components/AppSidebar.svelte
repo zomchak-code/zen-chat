@@ -12,6 +12,7 @@
   import { authService } from "$lib/service/auth";
   import Feedback from "./Feedback.svelte";
   import { ENV } from "$lib/util/env";
+  import AuthButton from "./AuthButton.svelte";
 
   const convex = useConvexClient();
   const chats = useQuery(api.chat.get, {});
@@ -35,13 +36,13 @@
   variant="floating"
   class="opacity-30 hover:opacity-100 transition"
 >
-  <Sidebar.Header class="pl-4 flex-row justify-between items-center text-sm">
-    Zen Chat
-    <Sidebar.Trigger>
-      <SquareChevronLeft />
-    </Sidebar.Trigger>
-  </Sidebar.Header>
-  <Sidebar.Content class="p-2">
+  <Sidebar.Header class="gap-4">
+    <div class="pl-2 flex justify-between text-lg">
+      Zen Chat
+      <Sidebar.Trigger>
+        <SquareChevronLeft />
+      </Sidebar.Trigger>
+    </div>
     <Sidebar.Menu>
       <Sidebar.MenuItem>
         <Sidebar.MenuButton isActive={page.route.id === "/"}>
@@ -53,6 +54,10 @@
           {/snippet}
         </Sidebar.MenuButton>
       </Sidebar.MenuItem>
+    </Sidebar.Menu>
+  </Sidebar.Header>
+  <Sidebar.Content class="p-2">
+    <Sidebar.Menu>
       {#each chats.data ?? [] as chat}
         <Sidebar.MenuItem class="group/item flex gap-1">
           <Sidebar.MenuButton isActive={page.params.id === chat._id}>
@@ -75,9 +80,9 @@
     </Sidebar.Menu>
   </Sidebar.Content>
 
-  <Sidebar.Footer class="space-y-2">
-    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.75}
-      <div class="pl-2 space-y-1">
+  <Sidebar.Footer>
+    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.33}
+      <div class="pl-2 py-2 space-y-2">
         <div class="flex justify-between text-xs">
           <span>Credits used</span>
           <span>
@@ -96,7 +101,7 @@
       >
         <span>🙏</span> Feedback
       </Button>
-      <div id="profile"></div>
+      <AuthButton />
     </div>
     <!-- <div class="text-xs opacity-30 hover:opacity-100">
       Made with {mode.current === "light" ? "🖤" : "🤍"} in Berlin

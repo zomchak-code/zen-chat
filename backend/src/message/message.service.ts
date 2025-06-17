@@ -37,6 +37,11 @@ class MessageService {
 
   async* respond(auth: ConvexClient, chat: Id<'chats'>, mode: string) {
     const anon = getConvex();
+    let reasoning = '';
+    let text = '';
+    const message = await anon.mutation(api.message.create, { chat, text });
+    yield { type: 'message' as const, id: message };
+
     const router = aiService.getRouter();
     const modelConfig = modes[mode];
     const model = router(modelConfig.id);
@@ -54,12 +59,8 @@ class MessageService {
       }
     });
 
-    let reasoning = '';
-    let text = '';
-    const message = await anon.mutation(api.message.create, { chat, text });
-    const interval = setInterval(() => {
-      anon.mutation(api.message.patch, { message, reasoning, text });
-    }, 1000);
+
+    const interval = setInterval(() => anon.mutation(api.message.patch, { message, reasoning, text }), 1000);
 
     for await (const part of stream.fullStream) {
       switch (part.type) {
@@ -79,7 +80,7 @@ class MessageService {
       }
     }
     clearInterval(interval);
-    await anon.mutation(api.message.patch, { message, reasoning, text });
+    await anon.mutation(api.message.patch, { message, reasoning, text, state: 'done' });
 
     const usage = await stream.usage;
     const credits = usage.promptTokens * modelConfig.input + usage.completionTokens * modelConfig.output;

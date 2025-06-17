@@ -4,7 +4,6 @@
   import { ArrowUp } from "@lucide/svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { api } from "$lib/service/convex";
-  import { authService } from "$lib/service/auth";
   import * as ToggleGroup from "$lib/components/ui/toggle-group";
 
   const modes = {
@@ -48,7 +47,7 @@
   }
 </script>
 
-<form onsubmit={submit} class="space-y-1">
+<form onsubmit={submit} class="space-y-1 rounded-lg">
   <Textarea
     bind:value={text}
     disabled={loading}
@@ -62,7 +61,6 @@
       value={user.data?.mode}
       onValueChange={saveMode}
       type="single"
-      class="opacity-50 hover:opacity-100 transition"
     >
       {#each Object.entries(modes) as [value, label]}
         <ToggleGroup.Item {value}>{label}</ToggleGroup.Item>

@@ -5,7 +5,7 @@ export const create = mutation({
   args: { chat: v.id('chats'), text: v.string() },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    return ctx.db.insert('messages', { ...args, user: identity?.subject });
+    return ctx.db.insert('messages', { ...args, user: identity?.subject, state: identity ? 'done' : 'in_progress' });
   },
 });
 
@@ -15,7 +15,12 @@ export const get = query({
 });
 
 export const patch = mutation({
-  args: { message: v.id('messages'), text: v.optional(v.string()), reasoning: v.optional(v.string()) },
+  args: {
+    message: v.id('messages'),
+    state: v.optional(v.string()),
+    text: v.optional(v.string()),
+    reasoning: v.optional(v.string())
+  },
   handler: async (ctx, args) => {
     const storedMessage = await ctx.db.get(args.message);
     if (storedMessage?.user) {
@@ -27,7 +32,11 @@ export const patch = mutation({
         .take(100);
       await Promise.all(followingMessages.map(message => ctx.db.delete(message._id)));
     }
-    await ctx.db.patch(args.message, { text: args.text, reasoning: args.reasoning });
+    const patch: Record<string, string> = {};
+    if (args.state) patch.state = args.state;
+    if (args.text) patch.text = args.text;
+    if (args.reasoning) patch.reasoning = args.reasoning;
+    await ctx.db.patch(args.message, patch);
     return { ...storedMessage, text: args.text, reasoning: args.reasoning };
   }
 });

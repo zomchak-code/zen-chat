@@ -2,7 +2,7 @@
   import { api } from "$lib/service/convex";
   import { useQuery } from "convex-svelte";
   import { page } from "$app/state";
-  import { getOnStreaming, getStream } from "$lib/service/chat.state.svelte";
+  import { getOnStreaming, getStream } from "$lib/service/message.state.svelte";
   import ChatInput from "$lib/components/ChatInput.svelte";
   import { backend } from "$lib/service/backend";
   import Button from "$lib/components/ui/button/button.svelte";
@@ -20,33 +20,9 @@
   let focused = $state("");
   let editingText = $state("");
 
-  let chatStream = $state(getStream(page.params.id));
-
-  let loading = $state(false);
-
-  const unstreamedMessages = $derived.by(() => {
-    let unstreamed = messages.data;
-    if (
-      (loading || chatStream?.isStreaming) &&
-      unstreamed &&
-      !unstreamed[unstreamed.length - 1].user
-    ) {
-      unstreamed = unstreamed.slice(0, -1);
-    }
-    return unstreamed;
-  });
-
-  const lastUnstreamedMessageFromUser = $derived.by(() => {
-    if (!unstreamedMessages) return;
-    const lastUnstreamed = unstreamedMessages[unstreamedMessages.length - 1];
-    return lastUnstreamed.user;
-  });
-
   const onStreaming = getOnStreaming();
 
   async function submit(submition: { mode: string; text: string }) {
-    chatStream = undefined;
-    loading = true;
     const res = await backend.messages.$post({
       json: { chat: page.params.id, ...submition },
     });
@@ -54,9 +30,11 @@
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    onStreaming(page.params.id, reader);
-    chatStream = getStream(page.params.id);
-    loading = false;
+    const event = await reader.read();
+    const decoded = new TextDecoder().decode(event.value);
+    const message = decoded.split("data:").pop()?.trim();
+
+    onStreaming(message, reader);
   }
 
   function scrollIntoView(e: MouseEvent) {
@@ -68,8 +46,6 @@
   }
 
   async function edit() {
-    chatStream = undefined;
-    loading = true;
     const res = await backend.messages.$patch({
       json: {
         message: focused,
@@ -81,9 +57,11 @@
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    onStreaming(page.params.id, reader);
-    chatStream = getStream(page.params.id);
-    loading = false;
+    const event = await reader.read();
+    const decoded = new TextDecoder().decode(event.value);
+    const message = decoded.split("data:").pop()?.trim();
+
+    onStreaming(message, reader);
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -94,7 +72,6 @@
   }
 
   async function rerun(message: string, mode: string) {
-    chatStream = undefined;
     const res = await backend.messages.$delete({
       json: { message, mode },
     });
@@ -102,86 +79,82 @@
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    onStreaming(page.params.id, reader);
-    chatStream = getStream(page.params.id);
+    const event = await reader.read();
+    const decoded = new TextDecoder().decode(event.value);
+    const id = decoded.split("data:").pop()?.trim();
+
+    onStreaming(id, reader);
   }
 </script>
 
-<div class="h-screen relative flex flex-col-reverse overflow-auto">
-  <div class="w-full flex flex-col items-center">
-    <div class="grow w-full max-w-2xl py-2 flex flex-col-reverse gap-2">
-      {#if lastUnstreamedMessageFromUser && chatStream?.isStreaming}
-        <div class="prose dark:prose-invert p-2">
-          {@html converter.makeHtml(chatStream.content)}
-        </div>
-        {#if chatStream.reasoning}
-          <Accordion.Root type="single">
-            <Accordion.Item value="item-1" class="rounded-lg px-2 self-start">
-              <Accordion.Trigger onclick={scrollIntoView}>
-                Reasoning <Loader2 size={20} class="animate-spin" />
-              </Accordion.Trigger>
-              <Accordion.Content
-                class="prose dark:prose-invert rounded-lg  bg-muted px-4 py-2"
-              >
-                {@html converter.makeHtml(chatStream.reasoning)}
-              </Accordion.Content>
-            </Accordion.Item>
-          </Accordion.Root>
-        {/if}
-      {/if}
-      {#if unstreamedMessages}
-        {#each unstreamedMessages.reverse() as message}
-          {#if message.user}
-            <div class="self-end flex flex-col gap-1 items-end">
-              <div
-                oninput={(e) => (editingText = e.currentTarget.innerText)}
-                contenteditable
-                role="textbox"
-                tabindex="0"
-                {onkeydown}
-                onfocus={() => (focused = message._id)}
-                onblur={() => setTimeout(() => (focused = ""), 100)}
-                class="rounded-lg p-2 bg-muted whitespace-pre-line"
-              >
-                {message.text}
-                {#if focused === message._id}
-                  <div class="inline-block float-end">
-                    <div class="flex items-center pl-2">
-                      <!-- <Select.Root type="single">
+<div class="h-screen items-center relative flex flex-col-reverse overflow-auto">
+  <div class="sticky bottom-0 rounded px-10 p-4 glass z-10">
+    <div class="w-screen max-w-2xl">
+      <ChatInput onsubmit={submit} />
+    </div>
+  </div>
+  {#if messages.data}
+    <div class="grow w-full max-w-2xl py-2 flex flex-col-reverse">
+      {#each messages.data.reverse() as message}
+        {#if message.user}
+          <div class="self-end flex flex-col gap-1 items-end">
+            <div
+              oninput={(e) => (editingText = e.currentTarget.innerText)}
+              contenteditable
+              role="textbox"
+              tabindex="0"
+              {onkeydown}
+              onfocus={() => (focused = message._id)}
+              onblur={() => setTimeout(() => (focused = ""), 100)}
+              class="rounded-lg p-2 bg-muted whitespace-pre-line"
+            >
+              {message.text}
+              {#if focused === message._id}
+                <div class="inline-block float-end">
+                  <div class="flex items-center pl-2">
+                    <!-- <Select.Root type="single">
                         <Select.Trigger class="bg-transparent border-none">
                           GPT-4o
                         </Select.Trigger>
                       </Select.Root> -->
-                      <Button onclick={edit} class="h-auto p-1!">
-                        <RefreshCw />
-                      </Button>
-                    </div>
+                    <Button onclick={edit} class="h-auto p-1!">
+                      <RefreshCw />
+                    </Button>
                   </div>
-                {/if}
-              </div>
-            </div>
-          {:else}
-            <div class="group">
-              {#if message.reasoning}
-                <Accordion.Root type="single">
-                  <Accordion.Item
-                    value="item-1"
-                    class="rounded-lg px-2 self-start"
-                  >
-                    <Accordion.Trigger onclick={scrollIntoView}>
-                      Reasoning
-                    </Accordion.Trigger>
-                    <Accordion.Content
-                      class="prose dark:prose-invert rounded-lg  bg-muted px-4 py-2"
-                    >
-                      {@html converter.makeHtml(message.reasoning)}
-                    </Accordion.Content>
-                  </Accordion.Item>
-                </Accordion.Root>
+                </div>
               {/if}
-              <div class="prose dark:prose-invert rounded-lg p-2">
-                {@html converter.makeHtml(message.text)}
-              </div>
+            </div>
+          </div>
+        {:else}
+          <div class="group">
+            {#if getStream(message._id)?.reasoning || message.reasoning}
+              <Accordion.Root type="single">
+                <Accordion.Item
+                  value="item-1"
+                  class="rounded-lg px-2 self-start"
+                >
+                  <Accordion.Trigger onclick={scrollIntoView}>
+                    Reasoning
+                    {#if message.state === "in_progress"}
+                      <Loader2 size={20} class="animate-spin" />
+                    {/if}
+                  </Accordion.Trigger>
+                  <Accordion.Content
+                    class="prose dark:prose-invert rounded-lg  bg-muted px-4 py-2"
+                  >
+                    {@html converter.makeHtml(
+                      getStream(message._id)?.reasoning || message.reasoning,
+                    )}
+                  </Accordion.Content>
+                </Accordion.Item>
+              </Accordion.Root>
+            {/if}
+            <div class="prose dark:prose-invert rounded-lg px-2">
+              {@html converter.makeHtml(
+                getStream(message._id)?.text || message.text,
+              )}
+            </div>
+            {#if message.state === "done"}
               <div
                 class="flex px-2 gap-2 items-center opacity-0 group-hover:opacity-50 hover:opacity-100 transition"
               >
@@ -205,15 +178,10 @@
                   Cheap
                 </Button>
               </div>
-            </div>
-          {/if}
-        {/each}
-      {/if}
+            {/if}
+          </div>
+        {/if}
+      {/each}
     </div>
-    <div
-      class="w-full max-w-2xl sticky bottom-0 rounded py-4 glass bg-background/60"
-    >
-      <ChatInput onsubmit={submit} />
-    </div>
-  </div>
+  {/if}
 </div>

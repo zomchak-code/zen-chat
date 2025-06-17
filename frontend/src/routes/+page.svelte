@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import { backend } from "$lib/service/backend";
-  import { getOnStreaming } from "$lib/service/chat.state.svelte";
+  import { getOnStreaming } from "$lib/service/message.state.svelte";
   import ChatInput from "$lib/components/ChatInput.svelte";
 
   const onStreaming = getOnStreaming();
@@ -12,13 +12,19 @@
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    const { value } = await reader.read();
-    const event = new TextDecoder().decode(value);
-    const chatId = event.split("data:").pop()?.trim();
+    const decoder = new TextDecoder();
 
-    onStreaming(chatId, reader);
+    let event = await reader.read();
+    let decoded = decoder.decode(event.value);
+    const chat = decoded.split("data:").pop()?.trim();
 
-    await goto(`/chat/${chatId}`);
+    event = await reader.read();
+    decoded = decoder.decode(event.value);
+    const message = decoded.split("data:").pop()?.trim();
+
+    onStreaming(message, reader);
+
+    await goto(`/chat/${chat}`);
   }
 </script>
 

@@ -9,7 +9,7 @@ export const create = mutation({
       throw new Error("Not authenticated");
     }
     const chat = await ctx.db.insert('chats', { user: identity.subject, name: '' });
-    await ctx.db.insert('messages', { chat, text: args.text, user: identity.subject });
+    await ctx.db.insert('messages', { chat, text: args.text, user: identity.subject, state: 'done' });
     return chat;
   },
 });

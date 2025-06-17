@@ -7,17 +7,20 @@
 	import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
 	import { ModeWatcher } from "mode-watcher";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-	import AppSidebar from "$lib/components/app-sidebar.svelte";
+	import AppSidebar from "$lib/components/AppSidebar.svelte";
 	import { ENV } from "$lib/util/env";
 	import { setupConvex, useConvexClient } from "convex-svelte";
-	import { setOnStreaming } from "$lib/service/chat.state.svelte";
+	import { setOnStreaming } from "$lib/service/message.state.svelte";
 	import { SquareChevronRight } from "@lucide/svelte";
 	import { anal } from "$lib/service/anal";
+	import { IsMobile } from "$lib/hooks/is-mobile.svelte";
 
 	setupConvex(ENV.VITE_CONVEX_URL);
 	const client = useConvexClient();
 	client.setAuth(authService.getToken);
 	anal.init();
+
+	const isMobile = new IsMobile();
 
 	const queryClient = new QueryClient();
 
@@ -46,16 +49,14 @@
 
 <ModeWatcher />
 <QueryClientProvider client={queryClient}>
-	{#if loading}
-		Loading...
-	{:else if guest}
+	{#if guest}
 		{@render children?.()}
 	{:else}
 		<Sidebar.Provider bind:open class="flex">
 			<AppSidebar />
 			<main class="grow">
-				{#if !open}
-					<Sidebar.Trigger class="fixed top-4 left-3 z-10">
+				{#if isMobile.current || !open}
+					<Sidebar.Trigger class="fixed top-4 left-3 z-10 glass">
 						<SquareChevronRight />
 					</Sidebar.Trigger>
 				{/if}

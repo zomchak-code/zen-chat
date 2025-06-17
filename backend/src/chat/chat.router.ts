@@ -18,14 +18,19 @@ export const chatRouter = new Hono()
       return token;
     });
 
+    const chat = await chatService.create(convex, body.text);
+
     return streamSSE(c, async stream => {
-      const chat = await chatService.create(convex, body.text);
 
       stream.writeSSE({ event: 'chat', data: chat });
 
       const iterator = messageService.respond(convex, chat, body.mode);
       for await (const part of iterator) {
-        stream.writeSSE({ event: part.type, data: part.textDelta });
+        if (part.type === 'message') {
+          stream.writeSSE({ event: part.type, data: part.id });
+        } else {
+          stream.writeSSE({ event: part.type, data: part.textDelta });
+        }
       }
     });
   });

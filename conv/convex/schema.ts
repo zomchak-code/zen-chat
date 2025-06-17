@@ -22,6 +22,7 @@ export default defineSchema({
 
     user: v.optional(v.string()),
 
+    state: v.string(),
     reasoning: v.optional(v.string()),
     text: v.string(),
   }),

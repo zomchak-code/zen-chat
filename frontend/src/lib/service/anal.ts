@@ -14,7 +14,6 @@ class AnalService {
       }
     )
     authService.onAuthStateChange(({ user }) => {
-      console.log(user);
       if (user) {
         posthog.identify(user.id, {
           email: user.primaryEmailAddress?.emailAddress,

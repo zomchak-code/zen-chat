@@ -1,15 +1,14 @@
 import { getContext, setContext } from "svelte";
 
 class ChatState {
-  chat: string;
+  message: string;
   reader: ReadableStreamReader<unknown>;
 
-  public isStreaming = $state(true);
-  public content = $state("");
+  public text = $state("");
   public reasoning = $state("");
 
-  constructor(chat: string, reader: ReadableStreamDefaultReader<unknown>) {
-    this.chat = chat;
+  constructor(message: string, reader: ReadableStreamDefaultReader<unknown>) {
+    this.message = message;
     this.reader = reader;
     const decoder = new TextDecoder();
 
@@ -22,7 +21,6 @@ class ChatState {
 
           let event = '';
           let i = 0;
-          console.log(lines);
           lines.forEach(line => {
             if (line) {
               if (line.startsWith('event:')) {
@@ -31,9 +29,7 @@ class ChatState {
               } else if (line.startsWith('data:')) {
                 const text = `${i++ ? '\n' : ''}${line.replaceAll('data: ', '')}`;
                 if (event.includes('text')) {
-                  this.content += text;
-                  console.log(text);
-                  console.log(this.content);
+                  this.text += text;
                 } else if (event.includes('reasoning')) {
                   this.reasoning += text;
                 }
@@ -46,7 +42,6 @@ class ChatState {
       } finally {
         reader.releaseLock();
         await new Promise(resolve => setTimeout(resolve, 3000));
-        this.isStreaming = false;
       }
     })();
   }
