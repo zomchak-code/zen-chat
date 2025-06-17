@@ -30,7 +30,8 @@ class AuthService {
     await promise;
     return await clerk.session?.getToken({ template: 'convex' });
   }
-  onAuthStateChange(listener: ListenerCallback) {
+  async onAuthStateChange(listener: ListenerCallback) {
+    await promise;
     clerk.addListener(listener);
   }
 }

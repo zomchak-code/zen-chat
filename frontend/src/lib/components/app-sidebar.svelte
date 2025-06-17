@@ -1,7 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import { clerk } from "$lib/service/auth";
   import Button from "./ui/button/button.svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { api } from "$lib/service/convex";
@@ -11,6 +10,8 @@
   import { mode } from "mode-watcher";
   import Progress from "./ui/progress/progress.svelte";
   import { authService } from "$lib/service/auth";
+  import Feedback from "./Feedback.svelte";
+  import { ENV } from "$lib/util/env";
 
   const convex = useConvexClient();
   const chats = useQuery(api.chat.get, {});
@@ -25,7 +26,9 @@
     }
   }
 
-  $effect(authService.mountButton);
+  $effect(() => {
+    authService.mountButton();
+  });
 </script>
 
 <Sidebar.Root
@@ -73,21 +76,32 @@
   </Sidebar.Content>
 
   <Sidebar.Footer class="space-y-2">
-    <div class="flex gap-2">
-      <div id="profile"></div>
-      <div class="grow flex flex-col justify-between">
+    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.75}
+      <div class="pl-2 space-y-1">
         <div class="flex justify-between text-xs">
           <span>Credits used</span>
           <span>
-            {Math.round(user.data?.creditsUsed)} / {user.data?.creditsAvailable}
+            {Math.round(user.data.creditsUsed)} / {user.data.creditsAvailable}
           </span>
         </div>
-        <Progress value={user.data?.creditsUsed} />
+        <Progress value={user.data.creditsUsed} />
       </div>
+    {/if}
+    <div class="flex gap-2">
+      <Button
+        href={`https://${ENV.VITE_FEATUREBASE_ORGANIZATION}.featurebase.app`}
+        target="_blank"
+        variant="ghost"
+        class="grow justify-start px-2"
+      >
+        <span>🙏</span> Feedback
+      </Button>
+      <div id="profile"></div>
     </div>
     <!-- <div class="text-xs opacity-30 hover:opacity-100">
       Made with {mode.current === "light" ? "🖤" : "🤍"} in Berlin
       <img src={berlin} alt="Berlin" class="inline h-5" /> by Mykola 🇺🇦
     </div> -->
+    <!-- <Feedback /> -->
   </Sidebar.Footer>
 </Sidebar.Root>

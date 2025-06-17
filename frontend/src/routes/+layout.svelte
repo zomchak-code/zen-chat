@@ -1,9 +1,9 @@
 <script lang="ts">
+	import "../app.css";
 	import { browser } from "$app/environment";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { authService } from "$lib/service/auth";
-	import "../app.css";
 	import { QueryClient, QueryClientProvider } from "@tanstack/svelte-query";
 	import { ModeWatcher } from "mode-watcher";
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
@@ -12,10 +12,12 @@
 	import { setupConvex, useConvexClient } from "convex-svelte";
 	import { setOnStreaming } from "$lib/service/chat.state.svelte";
 	import { SquareChevronRight } from "@lucide/svelte";
+	import { anal } from "$lib/service/anal";
 
 	setupConvex(ENV.VITE_CONVEX_URL);
 	const client = useConvexClient();
 	client.setAuth(authService.getToken);
+	anal.init();
 
 	const queryClient = new QueryClient();
 
