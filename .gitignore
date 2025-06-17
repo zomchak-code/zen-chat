@@ -1,0 +1,12 @@
+# deps
+node_modules/
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# OS
+.DS_Store
+Thumbs.db
