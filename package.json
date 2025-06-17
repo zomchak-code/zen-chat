@@ -10,7 +10,7 @@
     "frontend"
   ],
   "scripts": {
-    "convex": "bunx --filter convex deploy",
+    "convex": "bun --filter conv deploy",
     "backend": "bun --filter backend start",
     "frontend": "bun --filter frontend build"
   },
