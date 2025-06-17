@@ -27,6 +27,7 @@ class AuthService {
     return clerk.user;
   }
   async getToken() {
+    await promise;
     return await clerk.session?.getToken({ template: 'convex' });
   }
   onAuthStateChange(listener: ListenerCallback) {
