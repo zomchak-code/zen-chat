@@ -10,6 +10,7 @@
     "frontend"
   ],
   "scripts": {
+    "convex": "bun --filter convex dev",
     "backend": "bun --filter backend start"
   },
   "dependencies": {
