@@ -9,6 +9,9 @@
     "backend",
     "frontend"
   ],
+  "scripts": {
+    "backend": "bun --filter backend start"
+  },
   "dependencies": {
     "@clerk/backend": "^2.0.0",
     "convex": "^1.24.8",
