@@ -26,18 +26,13 @@
   let text = $state("");
   let loading = $state(false);
 
-  async function submit() {
-    loading = true;
-    try {
-      await onsubmit({
-        mode: user.data?.mode,
-        model: user.data?.modes[user.data?.mode],
-        text,
-      });
-      text = "";
-    } finally {
-      loading = false;
-    }
+  function submit() {
+    setTimeout(() => (text = ""), 200);
+    onsubmit({
+      mode: user.data?.mode,
+      model: user.data?.modes[user.data?.mode],
+      text,
+    });
   }
 
   async function updateMode(update: { mode: string; model?: string }) {
@@ -54,6 +49,7 @@
 
 <form onsubmit={submit} class="space-y-1 rounded-lg">
   <Textarea
+    id="chat-input"
     bind:value={text}
     disabled={loading}
     {onkeydown}
