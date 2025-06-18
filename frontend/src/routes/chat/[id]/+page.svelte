@@ -20,6 +20,9 @@
   });
 
   const messages = useQuery(api.message.get, { chat: page.params.id });
+  const streamingMessage = $derived(
+    messages.data?.filter((m) => m.state === "in_progress")[0],
+  );
 
   let focused = $state("");
   let editingText = $state("");
@@ -124,14 +127,26 @@
       open = undefined;
     }
   }
+
+  function stop() {
+    if (!streamingMessage) return;
+    backend.messages.stop[":id"].$post({
+      param: { id: streamingMessage._id },
+    });
+  }
 </script>
 
-<div class="h-screen items-center relative flex flex-col-reverse overflow-auto">
+<div
+  class="h-screen pt-4 items-center relative flex flex-col-reverse overflow-auto"
+>
   <div
     class="sticky bottom-0 w-full rounded px-10 p-4 glass z-10 flex justify-center"
   >
     <div class="w-full max-w-2xl">
-      <ChatInput onsubmit={submit} />
+      <ChatInput
+        onsubmit={submit}
+        onstop={streamingMessage ? stop : undefined}
+      />
     </div>
   </div>
   {#if messages.data}

@@ -15,10 +15,9 @@ const prices = {
 
   'deepseek/deepseek-chat-v3-0324': { input: 30, output: 88 },
   'meta-llama/llama-4-scout': { input: 8, output: 30 },
-
 }
 
-
+const stopped = new Set<string>();
 
 class MessageService {
   create(convex: ConvexClient, chat: Id<'chats'>, text: string) {
@@ -34,7 +33,6 @@ class MessageService {
   }
 
   async* respond(auth: ConvexClient, chat: Id<'chats'>, mode: string, modelId: string) {
-    console.log(mode, modelId);
     const anon = getConvex();
 
     const model = aiService.getModel(modelId);
@@ -63,7 +61,9 @@ class MessageService {
 
     const interval = setInterval(() => anon.mutation(api.message.patch, { message, reasoning, text }), 1000);
 
+    stopped.delete(message);
     for await (const part of stream.fullStream) {
+      if (stopped.has(message)) break;
       switch (part.type) {
         case 'reasoning': {
           yield part;
@@ -79,24 +79,25 @@ class MessageService {
           console.error(part);
           yield { type: text, textDelta: `Error: ${part.error.message}` };
         }
-        default: {
-          console.log(part.type);
-        }
       }
     }
     clearInterval(interval);
-    await anon.mutation(api.message.patch, { message, reasoning, text, state: 'done' });
+    await anon.mutation(api.message.patch, {
+      message,
+      reasoning,
+      text: text || 'Stopped',
+      state: 'done'
+    });
 
     const price = prices[modelId];
     if (!price) return;
     const usage = await stream.usage;
-    const provider = await stream.providerMetadata;
-    console.log(usage);
-    console.log(provider);
     if (!usage) return;
     const credits = (usage.promptTokens * price.input + usage.completionTokens * price.output) / 1_000_000;
     await auth.mutation(api.user.inc, { credits });
-    console.log(credits);
+  }
+  stop(id: string) {
+    stopped.add(id);
   }
 }
 

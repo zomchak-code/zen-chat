@@ -13,8 +13,6 @@
   import Feedback from "./Feedback.svelte";
   import { ENV } from "$lib/util/env";
   import AuthButton from "./AuthButton.svelte";
-  import logoLight from "$lib/assets/logo-light.png";
-  import logoDark from "$lib/assets/logo-dark.png";
 
   const convex = useConvexClient();
   const chats = useQuery(api.chat.get, {});
@@ -29,6 +27,58 @@
     }
   }
 
+  function getGroupName(creationTime: number): string {
+    const now = new Date();
+    const chatDate = new Date(creationTime);
+
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const startOfYesterday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1,
+    );
+    const startOfWeek = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 7,
+    );
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    if (chatDate >= startOfToday) {
+      return "Today";
+    }
+    if (chatDate >= startOfYesterday) {
+      return "Yesterday";
+    }
+    if (chatDate >= startOfWeek) {
+      return "Previous 7 Days";
+    }
+    if (chatDate >= startOfMonth) {
+      // Returns the full name of the current month, e.g., "June"
+      return now.toLocaleString("default", { month: "long" });
+    }
+
+    // For all older chats, group them by their year
+    return chatDate.getFullYear().toString();
+  }
+
+  const groupedChats = $derived.by(() => {
+    const groups: Record<string, { _id: string; name: string }[]> = {};
+
+    for (const chat of chats.data ?? []) {
+      const groupName = getGroupName(chat._creationTime * 0.99997);
+      if (!groups[groupName]) {
+        groups[groupName] = [];
+      }
+      groups[groupName].push(chat);
+    }
+    return groups;
+  });
+
   $effect(() => {
     authService.mountButton();
   });
@@ -40,14 +90,7 @@
 >
   <Sidebar.Header class="gap-4">
     <div class="pl-1.5 flex justify-between">
-      <div class="flex gap-1.5 items-center">
-        <img
-          src={mode.current === "light" ? logoLight : logoDark}
-          alt="Zen Chat"
-          class="object-contain w-5 pt-0.5"
-        />
-        Zen Chat
-      </div>
+      <div class="flex gap-1.5 items-center">Zen Chat</div>
       <Sidebar.Trigger>
         <SquareChevronLeft />
       </Sidebar.Trigger>
@@ -65,32 +108,37 @@
       </Sidebar.MenuItem>
     </Sidebar.Menu>
   </Sidebar.Header>
-  <Sidebar.Content class="p-2">
-    <Sidebar.Menu>
-      {#each chats.data ?? [] as chat}
-        <Sidebar.MenuItem class="group/item flex gap-1">
-          <Sidebar.MenuButton isActive={page.params.id === chat._id}>
-            {#snippet child({ props })}
-              <a href={`/chat/${chat._id}`} {...props}>
-                <!-- <item.icon /> -->
-                <span>{chat.name}</span>
-              </a>
-            {/snippet}
-          </Sidebar.MenuButton>
-          <Button
-            onclick={() => remove(chat)}
-            variant="ghost"
-            class="hidden group-hover/item:block h-auto p-2!"
-          >
-            <Trash />
-          </Button>
-        </Sidebar.MenuItem>
-      {/each}
-    </Sidebar.Menu>
+  <Sidebar.Content>
+    {#each Object.entries(groupedChats) as [groupName, chats]}
+      <Sidebar.Group>
+        <Sidebar.GroupLabel>{groupName}</Sidebar.GroupLabel>
+        <Sidebar.Menu>
+          {#each chats as chat}
+            <Sidebar.MenuItem class="group/item flex gap-1">
+              <Sidebar.MenuButton isActive={page.params.id === chat._id}>
+                {#snippet child({ props })}
+                  <a href={`/chat/${chat._id}`} {...props}>
+                    <!-- <item.icon /> -->
+                    <span>{chat.name}</span>
+                  </a>
+                {/snippet}
+              </Sidebar.MenuButton>
+              <Button
+                onclick={() => remove(chat)}
+                variant="ghost"
+                class="hidden group-hover/item:block h-auto p-2!"
+              >
+                <Trash />
+              </Button>
+            </Sidebar.MenuItem>
+          {/each}
+        </Sidebar.Menu>
+      </Sidebar.Group>
+    {/each}
   </Sidebar.Content>
 
-  <Sidebar.Footer>
-    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.2}
+  <Sidebar.Footer class="pr-3">
+    {#if user.data?.creditsUsed}
       <div class="pl-2 py-2 space-y-2">
         <div class="flex justify-between text-xs">
           <span>Credits used</span>
@@ -113,7 +161,7 @@
       <AuthButton />
     </div>
     <!-- <div class="text-xs opacity-30 hover:opacity-100">
-      Made with {mode.current === "light" ? "🖤" : "🤍"} in Berlin
+      Made for 🧘 in Berlin
       <img src={berlin} alt="Berlin" class="inline h-5" /> by Mykola 🇺🇦
     </div> -->
     <!-- <Feedback /> -->

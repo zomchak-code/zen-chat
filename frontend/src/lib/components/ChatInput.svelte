@@ -1,21 +1,24 @@
 <script lang="ts">
   import Button from "$lib/components/ui/button/button.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
-  import { ArrowUp } from "@lucide/svelte";
+  import { ArrowUp, Square } from "@lucide/svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { api } from "$lib/service/convex";
   import Modes from "./Modes.svelte";
+  import { on } from "svelte/events";
 
   const convex = useConvexClient();
 
   let {
     onsubmit,
+    onstop,
   }: {
     onsubmit: (submition: {
       mode: string;
       model: string;
       text: string;
     }) => Promise<unknown>;
+    onstop?: () => void;
   } = $props();
 
   const user = useQuery(api.user.get, {});
@@ -66,8 +69,12 @@
         onOpenChange={(open, mode) => open && updateMode({ mode })}
       />
     </div>
-    <Button type="submit" variant="ghost" disabled={!text}>
-      <ArrowUp />
-    </Button>
+    {#if onstop}
+      <Button onclick={onstop} class="size-6 p-0"></Button>
+    {:else}
+      <Button type="submit" variant="ghost" disabled={!text}>
+        <ArrowUp />
+      </Button>
+    {/if}
   </div>
 </form>

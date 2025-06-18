@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod/v4";
 import { getConvex } from "../convex/index.ts";
-import { streamSSE } from 'hono/streaming'
+import { streamSSE } from 'hono/streaming';
 import { messageService } from "./message.service.ts";
 
 export const messageRouter = new Hono()
@@ -77,5 +77,10 @@ export const messageRouter = new Hono()
           }
         }
       });
-    });
+    })
+  .post('/stop/:id', async c => {
+    const message = c.req.param('id');
+    messageService.stop(message);
+    return c.text('ok');
+  });
 
