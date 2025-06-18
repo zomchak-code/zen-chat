@@ -10,6 +10,7 @@ export const create = mutation({
     }
     const chat = await ctx.db.insert('chats', { user: identity.subject, name: '' });
     await ctx.db.insert('messages', { chat, text: args.text, user: identity.subject, state: 'done' });
+    await ctx.db.insert('messages', { chat, text: '', state: 'in_progress' });
     return chat;
   },
 });

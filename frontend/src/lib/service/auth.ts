@@ -14,7 +14,7 @@ class AuthService {
     clerk.mountSignIn(document.getElementById('sign-in'), {
       withSignUp: true,
       appearance: {
-        baseTheme: mode === 'dark' ? dark : undefined
+        baseTheme: mode === 'dark' ? dark : undefined,
       }
     });
   }

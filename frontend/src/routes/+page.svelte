@@ -6,7 +6,7 @@
 
   const onStreaming = getOnStreaming();
 
-  async function submit(json: { mode: string; text: string }) {
+  async function submit(json: { mode: string; model: string; text: string }) {
     const res = await backend.chats.$post({ json });
 
     const reader = res.body?.getReader();

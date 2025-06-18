@@ -5,7 +5,9 @@ export const create = mutation({
   args: { chat: v.id('chats'), text: v.string() },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    return ctx.db.insert('messages', { ...args, user: identity?.subject, state: identity ? 'done' : 'in_progress' });
+    const message = await ctx.db.insert('messages', { ...args, user: identity?.subject, state: identity ? 'done' : 'in_progress' });
+    await ctx.db.insert('messages', { chat: args.chat, state: 'in_progress', text: '' })
+    return message;
   },
 });
 
@@ -31,6 +33,7 @@ export const patch = mutation({
         )
         .take(100);
       await Promise.all(followingMessages.map(message => ctx.db.delete(message._id)));
+      await ctx.db.insert('messages', { chat: storedMessage.chat, state: 'in_progress', text: '' })
     }
     const patch: Record<string, string> = {};
     if (args.state) patch.state = args.state;
@@ -53,6 +56,7 @@ export const remove = mutation({
       )
       .take(100);
     await Promise.all(followingMessages.map(message => ctx.db.delete(message._id)));
+    await ctx.db.insert('messages', { chat: storedMessage.chat, state: 'in_progress', text: '' })
     return storedMessage;
   }
 });

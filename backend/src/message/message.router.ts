@@ -7,7 +7,7 @@ import { messageService } from "./message.service.ts";
 
 export const messageRouter = new Hono()
   .post("/", zValidator("json",
-    z.object({ chat: z.string(), mode: z.string(), text: z.string() })),
+    z.object({ chat: z.string(), mode: z.string(), model: z.string(), text: z.string() })),
     async (c) => {
       const body = c.req.valid("json");
 
@@ -20,7 +20,7 @@ export const messageRouter = new Hono()
       await messageService.create(convex, body.chat, body.text);
       return streamSSE(c, async stream => {
 
-        const iterator = messageService.respond(convex, body.chat, body.mode);
+        const iterator = messageService.respond(convex, body.chat, body.mode, body.model);
         for await (const part of iterator) {
           if (part.type === 'message') {
             stream.writeSSE({ event: part.type, data: part.id });
@@ -31,7 +31,7 @@ export const messageRouter = new Hono()
       });
     })
   .patch("/", zValidator("json",
-    z.object({ message: z.string(), mode: z.string(), text: z.string() })),
+    z.object({ message: z.string(), mode: z.string(), model: z.string(), text: z.string() })),
     async (c) => {
       const body = c.req.valid("json");
 
@@ -44,7 +44,7 @@ export const messageRouter = new Hono()
       const message = await messageService.update(convex, body.message, body.text);
 
       return streamSSE(c, async stream => {
-        const iterator = messageService.respond(convex, message.chat, body.mode);
+        const iterator = messageService.respond(convex, message.chat, body.mode, body.model);
         for await (const part of iterator) {
           if (part.type === 'message') {
             stream.writeSSE({ event: part.type, data: part.id });
@@ -55,7 +55,7 @@ export const messageRouter = new Hono()
       });
     })
   .delete("/", zValidator("json",
-    z.object({ message: z.string(), mode: z.string() })),
+    z.object({ message: z.string(), mode: z.string(), model: z.string() })),
     async (c) => {
       const body = c.req.valid("json");
 
@@ -68,7 +68,7 @@ export const messageRouter = new Hono()
       const message = await messageService.delete(convex, body.message);
 
       return streamSSE(c, async stream => {
-        const iterator = messageService.respond(convex, message.chat, body.mode);
+        const iterator = messageService.respond(convex, message.chat, body.mode, body.model);
         for await (const part of iterator) {
           if (part.type === 'message') {
             stream.writeSSE({ event: part.type, data: part.id });

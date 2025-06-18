@@ -1,6 +1,6 @@
 import { getContext, setContext } from "svelte";
 
-class ChatState {
+class MessageState {
   message: string;
   reader: ReadableStreamReader<unknown>;
 
@@ -41,25 +41,24 @@ class ChatState {
         }
       } finally {
         reader.releaseLock();
-        await new Promise(resolve => setTimeout(resolve, 3000));
       }
     })();
   }
 }
 
-const streams: Record<string, ChatState> = {};
+const streams: Record<string, MessageState> = $state({});
 
 export function setStream(chat: string, reader: ReadableStreamDefaultReader<unknown>) {
-  streams[chat] = new ChatState(chat, reader);
+  streams[chat] = new MessageState(chat, reader);
 }
 
-export function getStream(chat: string): ChatState | undefined {
-  return streams[chat];
+export function getStream(message: string): MessageState | undefined {
+  return streams[message];
 }
 
 
-function onStreaming(chat: string, reader: ReadableStreamDefaultReader<unknown>) {
-  setStream(chat, reader);
+function onStreaming(message: string, reader: ReadableStreamDefaultReader<unknown>) {
+  setStream(message, reader);
 }
 
 export function setOnStreaming() {

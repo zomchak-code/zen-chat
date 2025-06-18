@@ -4,20 +4,18 @@
   import { ArrowUp } from "@lucide/svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { api } from "$lib/service/convex";
-  import * as ToggleGroup from "$lib/components/ui/toggle-group";
-
-  const modes = {
-    smart: "Smart",
-    fast: "Fast",
-    cheap: "Cheap",
-  };
+  import Modes from "./Modes.svelte";
 
   const convex = useConvexClient();
 
   let {
     onsubmit,
   }: {
-    onsubmit: (submition: { mode: string; text: string }) => Promise<unknown>;
+    onsubmit: (submition: {
+      mode: string;
+      model: string;
+      text: string;
+    }) => Promise<unknown>;
   } = $props();
 
   const user = useQuery(api.user.get, {});
@@ -28,15 +26,19 @@
   async function submit() {
     loading = true;
     try {
-      await onsubmit({ mode: user.data?.mode, text });
+      await onsubmit({
+        mode: user.data?.mode,
+        model: user.data?.modes[user.data?.mode],
+        text,
+      });
       text = "";
     } finally {
       loading = false;
     }
   }
 
-  async function saveMode(value: string) {
-    await convex.mutation(api.user.update, { mode: value });
+  async function updateMode(update: { mode: string; model?: string }) {
+    await convex.mutation(api.user.update, update);
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -57,15 +59,13 @@
     placeholder="What's on your mind?"
   />
   <div class="px-1 flex justify-between">
-    <ToggleGroup.Root
-      value={user.data?.mode}
-      onValueChange={saveMode}
-      type="single"
-    >
-      {#each Object.entries(modes) as [value, label]}
-        <ToggleGroup.Item {value}>{label}</ToggleGroup.Item>
-      {/each}
-    </ToggleGroup.Root>
+    <div class="flex gap-2">
+      <Modes
+        value={user.data?.mode}
+        onclick={updateMode}
+        onOpenChange={(open, mode) => open && updateMode({ mode })}
+      />
+    </div>
     <Button type="submit" variant="ghost" disabled={!text}>
       <ArrowUp />
     </Button>

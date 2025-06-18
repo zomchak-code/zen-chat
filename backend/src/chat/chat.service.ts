@@ -11,8 +11,7 @@ class ChatService {
     return id;
   }
   async generateName(message: string) {
-    const router = aiService.getRouter();
-    const model = router('deepseek/deepseek-chat-v3-0324:free');
+    const model = aiService.getModel('deepseek/deepseek-chat-v3-0324:free');
     const name = await generateText({
       model,
       prompt: `Generate a title for a chat that starts with the following message: "${message}"\nOnly return the name, no other text or quotes.`,

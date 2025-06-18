@@ -13,6 +13,8 @@
   import Feedback from "./Feedback.svelte";
   import { ENV } from "$lib/util/env";
   import AuthButton from "./AuthButton.svelte";
+  import logoLight from "$lib/assets/logo-light.png";
+  import logoDark from "$lib/assets/logo-dark.png";
 
   const convex = useConvexClient();
   const chats = useQuery(api.chat.get, {});
@@ -37,8 +39,15 @@
   class="opacity-30 hover:opacity-100 transition"
 >
   <Sidebar.Header class="gap-4">
-    <div class="pl-2 flex justify-between text-lg">
-      Zen Chat
+    <div class="pl-1.5 flex justify-between">
+      <div class="flex gap-1.5 items-center">
+        <img
+          src={mode.current === "light" ? logoLight : logoDark}
+          alt="Zen Chat"
+          class="object-contain w-5 pt-0.5"
+        />
+        Zen Chat
+      </div>
       <Sidebar.Trigger>
         <SquareChevronLeft />
       </Sidebar.Trigger>
@@ -81,7 +90,7 @@
   </Sidebar.Content>
 
   <Sidebar.Footer>
-    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.33}
+    {#if user.data && user.data.creditsUsed / user.data.creditsAvailable > 0.2}
       <div class="pl-2 py-2 space-y-2">
         <div class="flex justify-between text-xs">
           <span>Credits used</span>

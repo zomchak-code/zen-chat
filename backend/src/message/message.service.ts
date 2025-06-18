@@ -2,25 +2,23 @@ import { api, getConvex, type Id } from "../convex/index.ts";
 import { streamText } from 'ai';
 import type { ConvexClient } from "convex/browser";
 import { aiService } from "../ai/ai.service.ts";
+import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google";
 
+const prices = {
+  'google/gemini-2.5-pro': { input: 125, output: 1000 },
+  'anthropic/claude-opus-4': { input: 1500, output: 7500 },
+  'o3-pro': { input: 2000, output: 8000 },
 
-const modes = {
-  smart: {
-    id: 'google/gemini-2.5-pro-preview',
-    input: 125 / 1_000_000,
-    output: 1000 / 1_000_000,
-  },
-  fast: {
-    id: 'google/gemini-2.5-flash-preview-05-20:thinking',
-    input: 15 / 1_000_000,
-    output: 350 / 1_000_000,
-  },
-  cheap: {
-    id: 'x-ai/grok-3-mini-beta',
-    input: 30 / 1_000_000,
-    output: 50 / 1_000_000,
-  }
+  'gemini-2.5-flash': { input: 30, output: 250 },
+  'x-ai/grok-3-mini-beta': { input: 30, output: 50 },
+  'openai/o4-mini': { input: 110, output: 440 },
+
+  'deepseek/deepseek-chat-v3-0324': { input: 30, output: 88 },
+  'meta-llama/llama-4-scout': { input: 8, output: 30 },
+
 }
+
+
 
 class MessageService {
   create(convex: ConvexClient, chat: Id<'chats'>, text: string) {
@@ -35,30 +33,33 @@ class MessageService {
     return convex.mutation(api.message.remove, { message });
   }
 
-  async* respond(auth: ConvexClient, chat: Id<'chats'>, mode: string) {
+  async* respond(auth: ConvexClient, chat: Id<'chats'>, mode: string, modelId: string) {
+    console.log(mode, modelId);
     const anon = getConvex();
+
+    const model = aiService.getModel(modelId);
+    const history = await anon.query(api.message.get, { chat });
+
+    const last = history.pop();
+    if (!last) throw new Error("No history");
+    const message = last._id;
+
     let reasoning = '';
     let text = '';
-    const message = await anon.mutation(api.message.create, { chat, text });
     yield { type: 'message' as const, id: message };
-
-    const router = aiService.getRouter();
-    const modelConfig = modes[mode];
-    const model = router(modelConfig.id);
-    const history = await anon.query(api.message.get, { chat });
 
     const stream = streamText({
       model,
       messages: history.map(message => ({ role: message.user ? 'user' : 'assistant', content: message.text })),
       providerOptions: {
         openrouter: {
-          reasoning: {
-            effort: 'high'
-          }
-        }
+          reasoning: { enabled: mode !== 'fast' }
+        },
+        google: {
+          thinkingConfig: { thinkingBudget: 0 }
+        } satisfies GoogleGenerativeAIProviderOptions
       }
     });
-
 
     const interval = setInterval(() => anon.mutation(api.message.patch, { message, reasoning, text }), 1000);
 
@@ -74,18 +75,27 @@ class MessageService {
           text += part.textDelta;
           break;
         }
+        case 'error': {
+          console.error(part);
+          yield { type: text, textDelta: `Error: ${part.error.message}` };
+        }
         default: {
-          // console.log(part.type);
+          console.log(part.type);
         }
       }
     }
     clearInterval(interval);
     await anon.mutation(api.message.patch, { message, reasoning, text, state: 'done' });
 
+    const price = prices[modelId];
+    if (!price) return;
     const usage = await stream.usage;
-    const credits = usage.promptTokens * modelConfig.input + usage.completionTokens * modelConfig.output;
+    const provider = await stream.providerMetadata;
+    console.log(usage);
+    console.log(provider);
+    if (!usage) return;
+    const credits = (usage.promptTokens * price.input + usage.completionTokens * price.output) / 1_000_000;
     await auth.mutation(api.user.inc, { credits });
-
     console.log(credits);
   }
 }

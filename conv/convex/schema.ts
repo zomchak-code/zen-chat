@@ -5,8 +5,14 @@ export default defineSchema({
   users: defineTable({
     id: v.string(),
 
-    image_url: v.string(),
     mode: v.string(),
+    modes: v.object({
+      smart: v.string(),
+      fast: v.string(),
+      cheap: v.string(),
+    }),
+
+    image_url: v.string(),
     creditsAvailable: v.number(),
     creditsUsed: v.number(),
   }),

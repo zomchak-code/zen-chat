@@ -20,7 +20,7 @@ export const get = query({
 });
 
 export const update = mutation({
-  args: { mode: v.string() },
+  args: { mode: v.string(), model: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -28,6 +28,9 @@ export const update = mutation({
     }
     const user = await ctx.db.query('users').filter(q => q.eq(q.field('id'), identity.subject)).first();
     if (!user) throw new Error("User not found");
+    if (args.model) {
+      await ctx.db.patch(user._id, { modes: { ...user.modes, [args.mode]: args.model } });
+    }
     return ctx.db.patch(user._id, { mode: args.mode });
   },
 })
