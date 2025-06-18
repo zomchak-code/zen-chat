@@ -4,7 +4,11 @@ import { mutation, query } from "./_generated/server";
 export const create = mutation({
   args: { data: v.object({ id: v.string(), image_url: v.string() }) },
   handler: async (ctx, args) => ctx.db.insert('users', {
-    ...args.data, mode: 'smart', creditsAvailable: 100, creditsUsed: 0
+    ...args.data,
+    mode: 'smart',
+    modes: { 'smart': 'google/gemini-2.5-pro', 'fast': 'gemini-2.5-flash', 'cheap': 'meta-llama/llama-4-scout' },
+    creditsAvailable: 100,
+    creditsUsed: 0
   }),
 });
 
