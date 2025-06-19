@@ -68,7 +68,7 @@
     const groups: Record<string, { _id: string; name: string }[]> = {};
 
     for (const chat of chats.data ?? []) {
-      const groupName = getGroupName(chat._creationTime * 0.99997);
+      const groupName = getGroupName(chat._creationTime);
       if (!groups[groupName]) {
         groups[groupName] = [];
       }
