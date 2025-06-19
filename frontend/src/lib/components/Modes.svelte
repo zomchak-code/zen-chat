@@ -61,24 +61,22 @@
     >
       {@render children?.()}
       {mode.label}
-      {#if user.data}
-        <Select.Root
-          value={user.data.modes[modeKey]}
-          onValueChange={(model) => onclick({ mode: modeKey, model })}
-          onOpenChange={(open) => onOpenChange?.(open, modeKey)}
-          type="single"
-        >
-          <Select.Trigger
-            onclick={(e) => e.stopPropagation()}
-            class="cursor-pointer border-none shadow-none bg-transparent! hover:bg-input! transition-all rounded-l-none p-2"
-          />
-          <Select.Content class="border-none shadow-none glass bg-transparent">
-            {#each Object.entries(mode.models) as [key, model]}
-              <Select.Item value={key}>{model}</Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      {/if}
+      <Select.Root
+        value={user.data?.modes[modeKey]}
+        onValueChange={(model) => onclick({ mode: modeKey, model })}
+        onOpenChange={(open) => onOpenChange?.(open, modeKey)}
+        type="single"
+      >
+        <Select.Trigger
+          onclick={(e) => e.stopPropagation()}
+          class="cursor-pointer border-none shadow-none bg-transparent! hover:bg-input! transition-all rounded-l-none p-2"
+        />
+        <Select.Content class="border-none shadow-none glass bg-transparent">
+          {#each Object.entries(mode.models) as [key, model]}
+            <Select.Item value={key}>{model}</Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
     </Button>
   </div>
 {/each}
