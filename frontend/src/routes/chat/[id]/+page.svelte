@@ -136,9 +136,7 @@
   }
 </script>
 
-<div
-  class="h-screen items-center relative flex flex-col-reverse overflow-auto p-2"
->
+<div class="h-screen items-center relative flex flex-col-reverse overflow-auto">
   <div
     class="sticky bottom-0 w-full rounded px-10 p-4 glass z-10 flex justify-center"
   >
@@ -150,7 +148,7 @@
     </div>
   </div>
   {#if messages.data}
-    <div class="grow w-full max-w-2xl py-2 flex flex-col-reverse">
+    <div class="grow w-full max-w-2xl p-2 flex flex-col-reverse">
       {#each messages.data.reverse() as message}
         {#if message.user}
           <div class="self-end flex flex-col gap-1 items-end group">
