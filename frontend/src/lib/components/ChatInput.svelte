@@ -3,7 +3,7 @@
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
   import { ArrowUp } from "@lucide/svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
-  import { api } from "$lib/service/convex";
+  import { api, type Mode } from "$lib/service/convex";
   import Modes from "./Modes.svelte";
 
   const convex = useConvexClient();
@@ -26,15 +26,16 @@
   let loading = $state(false);
 
   function submit() {
+    if (!user.data) throw new Error("User not authenticated");
     setTimeout(() => (text = ""), 200);
     onsubmit({
-      mode: user.data?.mode,
-      model: user.data?.modes[user.data?.mode],
+      mode: user.data.mode,
+      model: user.data.modes[user.data.mode],
       text,
     });
   }
 
-  async function updateMode(update: { mode: string; model?: string }) {
+  async function updateMode(update: { mode: Mode; model?: string }) {
     await convex.mutation(api.user.update, update);
   }
 
@@ -56,7 +57,7 @@
     class="min-h-0 max-h-80 resize-none border-none shadow-none ring-0! bg-secondary px-3.5"
     placeholder="What's on your mind?"
   />
-  <div class="pr-1 flex justify-between items-center">
+  <div class="flex justify-between items-center">
     <div class="flex gap-2">
       <Modes
         value={user.data?.mode}
@@ -65,11 +66,11 @@
       />
     </div>
     {#if onstop}
-      <Button onclick={onstop} variant="ghost" class="px-3">
+      <Button onclick={onstop} variant="ghost" class="px-2">
         <div class="size-4 rounded-sm bg-primary"></div>
       </Button>
     {:else}
-      <Button type="submit" disabled={!text} variant="ghost">
+      <Button type="submit" disabled={!text} variant="ghost" class="px-2!">
         <ArrowUp />
       </Button>
     {/if}

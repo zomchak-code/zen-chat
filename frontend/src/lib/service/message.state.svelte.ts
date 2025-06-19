@@ -17,7 +17,7 @@ class MessageState {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const lines = decoder.decode(value).split("\n").filter(line => line);
+          const lines = decoder.decode(value as AllowSharedBufferSource).split("\n").filter(line => line);
 
           let event = '';
           let i = 0;

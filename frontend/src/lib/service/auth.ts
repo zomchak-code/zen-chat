@@ -11,7 +11,9 @@ const promise = clerk.load({
 class AuthService {
   async signIn(mode: 'light' | 'dark') {
     await promise;
-    clerk.mountSignIn(document.getElementById('sign-in'), {
+    const node = document.getElementById('sign-in');
+    if (!node) throw new Error("Sign in node not found");
+    clerk.mountSignIn(node as HTMLDivElement, {
       withSignUp: true,
       appearance: {
         baseTheme: mode === 'dark' ? dark : undefined,
@@ -21,7 +23,7 @@ class AuthService {
   signOut() {
     clerk.signOut();
   }
-  async openProfile(mode: 'light' | 'dark') {
+  async openProfile(mode?: 'light' | 'dark') {
     await promise;
     clerk.openUserProfile({
       appearance: {

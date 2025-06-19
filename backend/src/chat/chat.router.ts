@@ -11,17 +11,11 @@ const schema = z.object({ mode: z.string(), model: z.string(), text: z.string() 
 export const chatRouter = new Hono()
   .post("/", zValidator("json", schema), async (c) => {
     const body = c.req.valid("json");
-
-    const convex = getConvex();
-    convex.setAuth(async () => {
-      const token = c.req.header("Authorization")?.split(" ")[1];
-      return token;
-    });
+    const convex = getConvex(c.req.header("Authorization"));
 
     const chat = await chatService.create(convex, body.text);
 
     return streamSSE(c, async stream => {
-
       stream.writeSSE({ event: 'chat', data: chat });
 
       const iterator = messageService.respond(convex, chat, body.mode, body.model);

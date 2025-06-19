@@ -3,7 +3,7 @@
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import Button from "./ui/button/button.svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
-  import { api } from "$lib/service/convex";
+  import { api, type Id } from "$lib/service/convex";
   import { Plus, SquareChevronLeft, Trash } from "@lucide/svelte";
   import { page } from "$app/state";
   import berlin from "$lib/assets/berlin.svg";
@@ -16,7 +16,7 @@
   const chats = useQuery(api.chat.get, {});
   const user = useQuery(api.user.get, {});
 
-  async function remove(chat: { _id: string; name: string }) {
+  async function remove(chat: { _id: Id<"chats">; name: string }) {
     if (confirm(`Are you sure you want to delete ${chat.name}?`)) {
       await convex.mutation(api.chat.remove, { id: chat._id });
       if (page.params.id === chat._id) {
@@ -65,7 +65,7 @@
   }
 
   const groupedChats = $derived.by(() => {
-    const groups: Record<string, { _id: string; name: string }[]> = {};
+    const groups: Record<string, { _id: Id<"chats">; name: string }[]> = {};
 
     for (const chat of chats.data ?? []) {
       const groupName = getGroupName(chat._creationTime);
@@ -132,7 +132,7 @@
   </Sidebar.Content>
 
   <Sidebar.Footer class="pr-5">
-    {#if user.data?.creditsUsed}
+    {#if user.data && user.data.creditsUsed > 1}
       <div class="pl-2 py-2 space-y-2">
         <div class="flex justify-between text-xs">
           <span>Credits used</span>

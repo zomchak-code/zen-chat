@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api } from "$lib/service/convex";
+  import { api, type Mode, type Id } from "$lib/service/convex";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { page } from "$app/state";
   import { getOnStreaming, getStream } from "$lib/service/message.state.svelte";
@@ -19,7 +19,9 @@
     openLinksInNewWindow: true,
   });
 
-  const messages = useQuery(api.message.get, { chat: page.params.id });
+  const messages = useQuery(api.message.get, {
+    chatId: page.params.id as Id<"chats">,
+  });
   const streamingMessage = $derived(
     messages.data?.filter((m) => m.state === "in_progress")[0],
   );
@@ -29,19 +31,30 @@
 
   const onStreaming = getOnStreaming();
 
-  async function submit(submition: { mode: string; text: string }) {
+  async function stream(
+    reader: ReadableStreamDefaultReader<AllowSharedBufferSource>,
+  ) {
+    const event = await reader.read();
+    const decoded = new TextDecoder().decode(event.value);
+    const message = decoded.split("data:").pop()?.trim();
+    if (!message) throw new Error("No message");
+
+    onStreaming(message, reader);
+  }
+
+  async function submit(submition: {
+    mode: string;
+    text: string;
+    model: string;
+  }) {
     const res = await backend.messages.$post({
-      json: { chat: page.params.id, ...submition },
+      json: { chatId: page.params.id, ...submition },
     });
 
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    const event = await reader.read();
-    const decoded = new TextDecoder().decode(event.value);
-    const message = decoded.split("data:").pop()?.trim();
-
-    onStreaming(message, reader);
+    stream(reader);
   }
 
   function scrollIntoView(e: MouseEvent) {
@@ -54,23 +67,21 @@
 
   const user = useQuery(api.user.get, {});
 
-  async function updateMode(update: { mode: string; model?: string }) {
+  async function updateMode(update: { mode: Mode; model?: string }) {
     await convex.mutation(api.user.update, update);
   }
 
-  async function edit(
-    messageId: string,
-    config?: { mode: string; model?: string },
-  ) {
+  async function edit(id: string, config?: { mode: Mode; model?: string }) {
     if (config?.model) {
       updateMode(config);
     }
+    if (!user.data) throw new Error("No user data");
     const mode = (config ?? user.data)?.mode;
     const res = await backend.messages.$patch({
       json: {
-        message: messageId,
+        id,
         mode,
-        model: config?.model ?? user.data?.modes[mode],
+        model: config?.model ?? user.data.modes[mode],
         text: editingText,
       },
     });
@@ -78,11 +89,7 @@
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
 
-    const event = await reader.read();
-    const decoded = new TextDecoder().decode(event.value);
-    const message = decoded.split("data:").pop()?.trim();
-
-    onStreaming(message, reader);
+    stream(reader);
   }
 
   async function onkeydown(e: KeyboardEvent) {
@@ -92,18 +99,16 @@
     }
   }
 
-  async function rerun(
-    messageId: string,
-    config?: { mode: string; model?: string },
-  ) {
+  async function rerun(id: string, config?: { mode: Mode; model?: string }) {
     if (config?.model) {
       updateMode(config);
     }
+    if (!user.data) throw new Error("No user data");
     const mode = (config ?? user.data)?.mode;
 
     const res = await backend.messages.$delete({
       json: {
-        message: messageId,
+        id,
         mode,
         model: config?.model ?? user.data?.modes[mode],
       },
@@ -111,12 +116,7 @@
 
     const reader = res.body?.getReader();
     if (!reader) throw new Error("No reader");
-
-    const event = await reader.read();
-    const decoded = new TextDecoder().decode(event.value);
-    const id = decoded.split("data:").pop()?.trim();
-
-    onStreaming(id, reader);
+    stream(reader);
   }
 
   let open = $state();
@@ -161,7 +161,7 @@
                 {onkeydown}
                 onfocus={() => (focused = message._id)}
                 onblur={() => setTimeout(() => (focused = ""), 100)}
-                class="p-2 rounded-lg bg-muted hover:bg-muted/50 whitespace-pre-line"
+                class="py-2 px-3 rounded-lg bg-muted hover:bg-muted/50 whitespace-pre-line"
               >
                 {message.text}
               </div>
@@ -201,7 +201,9 @@
                     class="prose dark:prose-invert rounded-lg  bg-muted px-4 py-2"
                   >
                     {@html converter.makeHtml(
-                      getStream(message._id)?.reasoning || message.reasoning,
+                      getStream(message._id)?.reasoning ||
+                        message.reasoning ||
+                        "",
                     )}
                   </Accordion.Content>
                 </Accordion.Item>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useQuery } from "convex-svelte";
-  import { api } from "$lib/service/convex";
+  import { api, type Mode } from "$lib/service/convex";
   import Button from "./ui/button/button.svelte";
   import * as Select from "$lib/components/ui/select";
   import type { Snippet } from "svelte";
@@ -14,9 +14,13 @@
     children?: Snippet;
     value?: string;
     open?: boolean;
-    onOpenChange?: (open: boolean, mode: string) => void;
-    onclick: (update: { mode: string; model?: string }) => void;
+    onOpenChange?: (open: boolean, mode: Mode) => void;
+    onclick: (update: { mode: Mode; model?: string }) => void;
   } = $props();
+
+  type Entries<T> = {
+    [K in keyof T]: [K, T[K]];
+  }[keyof T][];
 
   const modes = {
     smart: {
@@ -43,12 +47,12 @@
         "deepseek/deepseek-chat-v3-0324": "Deepseek V3",
       },
     },
-  };
+  } as const;
 
   const user = useQuery(api.user.get, {});
 </script>
 
-{#each Object.entries(modes) as [modeKey, mode]}
+{#each Object.entries(modes) as Entries<typeof modes> as [modeKey, mode]}
   <div class={["flex"]}>
     <Button
       onclick={() => onclick({ mode: modeKey })}
@@ -57,22 +61,24 @@
     >
       {@render children?.()}
       {mode.label}
-      <Select.Root
-        value={user.data?.modes[modeKey]}
-        onValueChange={(model) => onclick({ mode: modeKey, model })}
-        onOpenChange={(open) => onOpenChange?.(open, modeKey)}
-        type="single"
-      >
-        <Select.Trigger
-          onclick={(e) => e.stopPropagation()}
-          class="cursor-pointer border-none shadow-none bg-transparent! hover:bg-input! transition-all rounded-l-none p-2"
-        />
-        <Select.Content class="border-none shadow-none glass bg-transparent">
-          {#each Object.entries(mode.models) as [key, model]}
-            <Select.Item value={key}>{model}</Select.Item>
-          {/each}
-        </Select.Content>
-      </Select.Root>
+      {#if user.data}
+        <Select.Root
+          value={user.data.modes[modeKey]}
+          onValueChange={(model) => onclick({ mode: modeKey, model })}
+          onOpenChange={(open) => onOpenChange?.(open, modeKey)}
+          type="single"
+        >
+          <Select.Trigger
+            onclick={(e) => e.stopPropagation()}
+            class="cursor-pointer border-none shadow-none bg-transparent! hover:bg-input! transition-all rounded-l-none p-2"
+          />
+          <Select.Content class="border-none shadow-none glass bg-transparent">
+            {#each Object.entries(mode.models) as [key, model]}
+              <Select.Item value={key}>{model}</Select.Item>
+            {/each}
+          </Select.Content>
+        </Select.Root>
+      {/if}
     </Button>
   </div>
 {/each}

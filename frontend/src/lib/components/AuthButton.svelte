@@ -5,9 +5,10 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { LogOut, Settings } from "@lucide/svelte";
   import { useSidebar } from "./ui/sidebar";
+  import type { UserResource } from "@clerk/types";
 
   const sidebar = useSidebar();
-  let user = $state();
+  let user = $state<UserResource | null | undefined>();
 
   async function init() {
     user = await authService.getUser();

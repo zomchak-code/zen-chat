@@ -1,11 +1,15 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+export const modeSchema = v.union(v.literal("smart"), v.literal("fast"), v.literal("cheap"));
+export type Mode = 'smart' | 'fast' | 'cheap';
+
 export default defineSchema({
   users: defineTable({
     id: v.string(),
 
-    mode: v.string(),
+    mode: modeSchema,
+
     modes: v.object({
       smart: v.string(),
       fast: v.string(),
@@ -18,13 +22,13 @@ export default defineSchema({
   }),
 
   chats: defineTable({
-    user: v.string(),
+    userId: v.string(),
 
     name: v.string(),
   }),
 
   messages: defineTable({
-    chat: v.id("chats"),
+    chatId: v.id("chats"),
 
     user: v.optional(v.string()),
 
