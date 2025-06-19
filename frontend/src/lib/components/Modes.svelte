@@ -53,7 +53,7 @@
     <Button
       onclick={() => onclick({ mode: modeKey })}
       variant={modeKey === value ? "secondary" : "ghost"}
-      class="pr-3"
+      class="pr-0!"
     >
       {@render children?.()}
       {mode.label}
@@ -65,7 +65,7 @@
       >
         <Select.Trigger
           onclick={(e) => e.stopPropagation()}
-          class="border-none shadow-none bg-transparent! p-0"
+          class="cursor-pointer border-none shadow-none bg-transparent! hover:bg-input! transition-all rounded-l-none p-2"
         />
         <Select.Content class="border-none shadow-none glass bg-transparent">
           {#each Object.entries(mode.models) as [key, model]}

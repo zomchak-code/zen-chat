@@ -137,7 +137,7 @@
 </script>
 
 <div
-  class="h-screen pt-4 items-center relative flex flex-col-reverse overflow-auto"
+  class="h-screen items-center relative flex flex-col-reverse overflow-auto p-2"
 >
   <div
     class="sticky bottom-0 w-full rounded px-10 p-4 glass z-10 flex justify-center"

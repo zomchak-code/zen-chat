@@ -18,9 +18,16 @@ class AuthService {
       }
     });
   }
-  async mountButton() {
+  signOut() {
+    clerk.signOut();
+  }
+  async openProfile(mode: 'light' | 'dark') {
     await promise;
-    clerk.mountUserButton(document.getElementById("profile"));
+    clerk.openUserProfile({
+      appearance: {
+        baseTheme: mode === 'dark' ? dark : undefined,
+      }
+    });
   }
   async getUser() {
     await promise;

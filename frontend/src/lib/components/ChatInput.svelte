@@ -1,11 +1,10 @@
 <script lang="ts">
   import Button from "$lib/components/ui/button/button.svelte";
   import Textarea from "$lib/components/ui/textarea/textarea.svelte";
-  import { ArrowUp, Square } from "@lucide/svelte";
+  import { ArrowUp } from "@lucide/svelte";
   import { useConvexClient, useQuery } from "convex-svelte";
   import { api } from "$lib/service/convex";
   import Modes from "./Modes.svelte";
-  import { on } from "svelte/events";
 
   const convex = useConvexClient();
 
@@ -57,7 +56,7 @@
     class="bg-transparent! min-h-0 resize-none border-none shadow-none ring-0!"
     placeholder="What's on your mind?"
   />
-  <div class="px-1 flex justify-between">
+  <div class="px-1 flex justify-between items-center">
     <div class="flex gap-2">
       <Modes
         value={user.data?.mode}
@@ -66,9 +65,14 @@
       />
     </div>
     {#if onstop}
-      <Button onclick={onstop} class="size-6 p-0"></Button>
+      <Button onclick={onstop} class="size-5 p-0 rounded-sm"></Button>
     {:else}
-      <Button type="submit" variant="ghost" disabled={!text}>
+      <Button
+        type="submit"
+        variant="ghost"
+        disabled={!text}
+        class="cursor-pointer"
+      >
         <ArrowUp />
       </Button>
     {/if}

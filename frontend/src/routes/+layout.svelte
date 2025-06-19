@@ -11,7 +11,7 @@
 	import { ENV } from "$lib/util/env";
 	import { setupConvex, useConvexClient } from "convex-svelte";
 	import { setOnStreaming } from "$lib/service/message.state.svelte";
-	import { SquareChevronRight } from "@lucide/svelte";
+	import { Loader2, SquareChevronRight } from "@lucide/svelte";
 	import { anal } from "$lib/service/anal";
 	import { IsMobile } from "$lib/hooks/is-mobile.svelte";
 
@@ -49,12 +49,16 @@
 
 <ModeWatcher />
 <QueryClientProvider client={queryClient}>
-	{#if guest}
+	{#if loading}
+		<div class="h-screen w-full flex justify-center items-center">
+			<!-- <Loader2 class="animate-spin" /> -->
+		</div>
+	{:else if guest}
 		{@render children?.()}
 	{:else}
 		<Sidebar.Provider bind:open class="flex">
 			<AppSidebar />
-			<main class="grow">
+			<main class="grow min-w-0">
 				{#if isMobile.current || !open}
 					<Sidebar.Trigger class="fixed top-4 left-3 z-10 glass">
 						<SquareChevronRight />

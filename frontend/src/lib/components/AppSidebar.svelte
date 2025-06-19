@@ -9,8 +9,6 @@
   import berlin from "$lib/assets/berlin.svg";
   import { mode } from "mode-watcher";
   import Progress from "./ui/progress/progress.svelte";
-  import { authService } from "$lib/service/auth";
-  import Feedback from "./Feedback.svelte";
   import { ENV } from "$lib/util/env";
   import AuthButton from "./AuthButton.svelte";
 
@@ -78,15 +76,11 @@
     }
     return groups;
   });
-
-  $effect(() => {
-    authService.mountButton();
-  });
 </script>
 
 <Sidebar.Root
   variant="floating"
-  class="opacity-30 hover:opacity-100 transition"
+  class="opacity-30 hover:opacity-100 transition z-20"
 >
   <Sidebar.Header class="gap-4">
     <div class="pl-1.5 flex justify-between">
