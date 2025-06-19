@@ -131,7 +131,7 @@
     {/each}
   </Sidebar.Content>
 
-  <Sidebar.Footer class="pr-3">
+  <Sidebar.Footer class="pr-5">
     {#if user.data?.creditsUsed}
       <div class="pl-2 py-2 space-y-2">
         <div class="flex justify-between text-xs">

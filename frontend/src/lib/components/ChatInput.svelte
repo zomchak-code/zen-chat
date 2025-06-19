@@ -53,10 +53,10 @@
     disabled={loading}
     {onkeydown}
     autofocus
-    class="bg-transparent! min-h-0 resize-none border-none shadow-none ring-0!"
+    class="min-h-0 max-h-80 resize-none border-none shadow-none ring-0! bg-secondary px-3.5"
     placeholder="What's on your mind?"
   />
-  <div class="px-1 flex justify-between items-center">
+  <div class="pr-1 flex justify-between items-center">
     <div class="flex gap-2">
       <Modes
         value={user.data?.mode}
@@ -65,14 +65,11 @@
       />
     </div>
     {#if onstop}
-      <Button onclick={onstop} class="size-5 p-0 rounded-sm"></Button>
+      <Button onclick={onstop} variant="ghost" class="px-3">
+        <div class="size-4 rounded-sm bg-primary"></div>
+      </Button>
     {:else}
-      <Button
-        type="submit"
-        variant="ghost"
-        disabled={!text}
-        class="cursor-pointer"
-      >
+      <Button type="submit" disabled={!text} variant="ghost">
         <ArrowUp />
       </Button>
     {/if}

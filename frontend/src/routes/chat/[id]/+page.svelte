@@ -138,7 +138,7 @@
 
 <div class="h-screen items-center relative flex flex-col-reverse overflow-auto">
   <div
-    class="sticky bottom-0 w-full rounded px-10 p-4 glass z-10 flex justify-center"
+    class="sticky bottom-0 w-full rounded p-4 glass bg-background/60 z-10 flex justify-center"
   >
     <div class="w-full max-w-2xl">
       <ChatInput
